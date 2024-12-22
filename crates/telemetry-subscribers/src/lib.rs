@@ -8,7 +8,7 @@ use opentelemetry::{
     trace::{Link, SamplingResult, SpanKind, TraceId, TracerProvider as _},
     Context, KeyValue,
 };
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig};
 use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::{
     self, runtime,
@@ -24,6 +24,7 @@ use std::{
     str::FromStr,
     sync::{atomic::Ordering, Arc, Mutex},
 };
+use opentelemetry_sdk::logs::LoggerProvider;
 use tracing::metadata::LevelFilter;
 use tracing::{error, info, Level};
 use tracing_appender::non_blocking::{NonBlocking, WorkerGuard};
@@ -411,18 +412,22 @@ impl TelemetryConfig {
                 let endpoint = env::var("OTLP_ENDPOINT")
                     .unwrap_or_else(|_| "http://localhost:4317".to_string());
 
-                let p = opentelemetry_otlp::new_pipeline()
-                    .tracing()
-                    .with_exporter(
-                        opentelemetry_otlp::new_exporter()
-                            .tonic()
-                            .with_endpoint(endpoint),
-                    )
-                    .with_trace_config(config)
-                    .install_batch(runtime::Tokio)
-                    .expect("Could not create async Tracer");
+                let exporter = SpanExporter::builder()
+                    .with_tonic()
+                    .with_endpoint(endpoint)
+                    .build()
+                    .expect("Failed to build SpanExporter");
 
-                let tracer = p.tracer(service_name);
+                let tracer_provider = TracerProvider::builder()
+                    .with_batch_exporter(exporter, runtime::Tokio)
+                    .with_resource(Resource::new(vec![opentelemetry::KeyValue::new(
+                        "service.name",
+                        service_name.clone(),
+                    )]))
+                    .with_sampler(Sampler::ParentBased(Box::new(sampler.clone())))
+                    .build();
+
+                let tracer = tracer_provider.tracer(service_name);
 
                 tracing_opentelemetry::layer().with_tracer(tracer)
             };
