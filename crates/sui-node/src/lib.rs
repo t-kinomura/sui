@@ -656,6 +656,7 @@ impl SuiNode {
         };
 
         let rpc_index = if is_full_node && config.rpc().is_some_and(|rpc| rpc.enable_indexing()) /* true to enable gPRC*/ {
+            info!("creating rpc index store");
             Some(Arc::new(
                 RpcIndexStore::new(
                     &config.db_path(),

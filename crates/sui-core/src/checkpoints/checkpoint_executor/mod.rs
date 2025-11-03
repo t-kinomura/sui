@@ -248,6 +248,8 @@ impl CheckpointExecutor {
             .and_then(|s| s.parse().ok())
             .unwrap_or(this.config.checkpoint_execution_max_concurrency);
 
+        info!(?concurrency, "Starting checkpoint execution with concurrency");
+
         let pipeline_stages = PipelineStages::new(next_to_schedule, this.metrics.clone());
 
         let final_checkpoint_executed = stream_synced_checkpoints(
