@@ -1091,6 +1091,7 @@ impl IndexStoreTables {
     }
 }
 
+/// IndexStore for gRPC server
 pub struct RpcIndexStore {
     tables: IndexStoreTables,
     pending_updates: Mutex<BTreeMap<u64, typed_store::rocks::DBBatch>>,

@@ -63,6 +63,8 @@ fn main() {
     );
     config.supported_protocol_versions = Some(SupportedProtocolVersions::SYSTEM_DEFAULT);
 
+    info!("config loaded: {:?}", config);
+
     // match run_with_range args
     // this means that we always modify the config used to start the node
     // for run_with_range. i.e if this is set in the config, it is ignored. only the cli args

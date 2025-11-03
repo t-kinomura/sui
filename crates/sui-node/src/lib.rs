@@ -641,7 +641,7 @@ impl SuiNode {
             checkpoint_store.clone(),
         );
 
-        let index_store = if is_full_node && config.enable_index_processing {
+        let index_store = if is_full_node && config.enable_index_processing /* false to disable json rpc */ {
             info!("creating index store");
             Some(Arc::new(IndexStore::new(
                 config.db_path().join("indexes"),
@@ -655,7 +655,7 @@ impl SuiNode {
             None
         };
 
-        let rpc_index = if is_full_node && config.rpc().is_some_and(|rpc| rpc.enable_indexing()) {
+        let rpc_index = if is_full_node && config.rpc().is_some_and(|rpc| rpc.enable_indexing()) /* true to enable gPRC*/ {
             Some(Arc::new(
                 RpcIndexStore::new(
                     &config.db_path(),
